@@ -102,4 +102,14 @@ class MainController: Controller() {
         val response = br.readText()
 // Do what you want with response
     }
+
+    /**
+     * Что планируется сделать:
+     * 1. Собрать jar
+     * 2. Загрузка из файла
+     * 3. Сохранение в файл
+     * 4. Сортировка по алфавиту
+     * 5. Поиск
+     * 6. Добавление избранного
+     * */
 }
