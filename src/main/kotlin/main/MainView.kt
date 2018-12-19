@@ -6,6 +6,8 @@ import javafx.collections.ObservableList
 import javafx.scene.input.Clipboard
 import javafx.stage.Stage
 import tornadofx.*
+import java.nio.file.Files
+import java.nio.file.Paths
 
 class MainView : View() {
     private val controller: MainController by inject()
@@ -54,12 +56,7 @@ class MainController: Controller() {
     private val loginList = ArrayList<String>()
 
     fun getPassword(input: String, output: SimpleStringProperty) {
-        if (passwordMap.isEmpty()) {
-            passwordMap.put("ftest", "ftest123")
-            passwordMap.put("support", "M5gisgKL")
-            passwordMap.put("ar2", "123321")
-            passwordMap.put("abarinov", "Abarinov")
-        }
+        init()
         val currentPassword = passwordMap.getOrDefault(input, "Не найдено совпадений")
         output.set(currentPassword)
         val clipboard = Clipboard.getSystemClipboard()
@@ -73,17 +70,27 @@ class MainController: Controller() {
     }
 
     fun getLogins() : ObservableList<String> {
-        loginList.add("ftest")
-        loginList.add("support")
-        loginList.add("ar2")
-        loginList.add("abarinov")
+        init()
         return FXCollections.observableArrayList(loginList)
+    }
+
+    fun init() {
+        if (loginList.isEmpty()) {
+            val fromDb = Files.readAllLines(Paths.get(this::class.java.getResource("/db.txt").toURI()))
+            for (item in fromDb) {
+                val splitted = item.split(" ")
+                val login = splitted[0]
+                val password = splitted[1]
+                loginList.add(login)
+                passwordMap[login] = password
+            }
+        }
     }
 
     /**
      * Что планируется сделать:
      --1. Собрать jar
-     * 2. Загрузка из файла
+     --2. Загрузка из файла
      * 3. Сохранение в файл
      * 4. Сортировка по алфавиту
      * 5. Поиск
