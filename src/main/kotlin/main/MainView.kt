@@ -6,10 +6,6 @@ import javafx.collections.ObservableList
 import javafx.scene.input.Clipboard
 import javafx.stage.Stage
 import tornadofx.*
-import java.io.BufferedInputStream
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.net.URL
 
 class MainView : View() {
     private val controller: MainController by inject()
