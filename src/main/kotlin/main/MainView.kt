@@ -84,25 +84,6 @@ class MainController: Controller() {
         return FXCollections.observableArrayList(loginList)
     }
 
-    fun sendMessage() {
-        var urlString = "https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s"
-
-        val apiToken = "706235916:AAEb7tSyepct-kWzosQx5XYw7sJ1JIVV4WQ"
-        val chatId = "@eisou"
-        val text = "Hello world!"
-
-        urlString = String.format(urlString, apiToken, chatId, text)
-
-        val url = URL(urlString)
-        val conn = url.openConnection()
-
-        val inputStream = BufferedInputStream(conn.getInputStream())
-        val br = BufferedReader(InputStreamReader(inputStream))
-
-        val response = br.readText()
-// Do what you want with response
-    }
-
     /**
      * Что планируется сделать:
      --1. Собрать jar
