@@ -1,40 +1,63 @@
 package main
 
+import com.mongodb.client.FindIterable
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.FXCollections
 import javafx.collections.ObservableList
+import javafx.scene.control.ListView
 import javafx.scene.input.Clipboard
 import javafx.stage.Stage
+import org.litote.kmongo.KMongo
+import org.litote.kmongo.getCollection
 import tornadofx.*
-import java.nio.file.Files
-import java.nio.file.Paths
 
 class MainView : View() {
     private val controller: MainController by inject()
+    private val login = SimpleStringProperty()
+    private val password = SimpleStringProperty()
     private val input = SimpleStringProperty()
     private val output = SimpleStringProperty()
 
+    private var loginsList: ListView<String> by singleAssign()
+
     override val root = vbox {
+        hbox {
+            textfield(login)
+            textfield(password)
+            button {
+                action {
+                    controller.addUser(login.get(), password.get())
+                    loginsList.items = controller.getLogins()
+                }
+            }
+        }
         textfield(input)
 
         button("Получить") {
             action {
-                //controller.sendMessage()
                 controller.getPassword(input.get(), output)
             }
         }
 
-        listview(controller.getLogins()) {
-            onUserSelect(1) {
-                controller.getLogin(it, output)
-            }
+        vbox {
+            label ("Список пользователей")
+            loginsList = listview {
+                id = "mainList"
+                onUserSelect(1) {
+                    controller.getLogin(it, output)
+                }
 
-            onUserSelect(2) {
-                controller.getPassword(it, output)
+                onUserSelect(2) {
+                    controller.getPassword(it, output)
+                }
             }
         }
 
         textfield(output)
+    }
+
+    init {
+        loginsList.items = controller.getLogins()
     }
 }
 
@@ -56,7 +79,6 @@ class MainController: Controller() {
     private val loginList = ArrayList<String>()
 
     fun getPassword(input: String, output: SimpleStringProperty) {
-        init()
         val currentPassword = passwordMap.getOrDefault(input, "Не найдено совпадений")
         output.set(currentPassword)
         val clipboard = Clipboard.getSystemClipboard()
@@ -70,28 +92,43 @@ class MainController: Controller() {
     }
 
     fun getLogins() : ObservableList<String> {
-        init()
+        refreshLists()
         return FXCollections.observableArrayList(loginList)
     }
 
-    fun init() {
-        if (loginList.isEmpty()) {
-            val fromDb = Files.readAllLines(Paths.get(this::class.java.getResource("/db.txt").toURI()))
-            for (item in fromDb) {
-                val splitted = item.split(" ")
-                val login = splitted[0]
-                val password = splitted[1]
-                loginList.add(login)
-                passwordMap[login] = password
-            }
+    fun refreshLists() {
+        loginList.clear()
+        passwordMap.clear()
+
+        for (item in getFromDb()) {
+            val login = item.login
+            val password = item.password
+            loginList.add(login)
+            passwordMap[login] = password
         }
+    }
+
+    fun getFromDb(): FindIterable<TestUser> {
+        val client = KMongo.createClient("10.10.80.20", 27017)
+        val database = client.getDatabase("mfc-stage")
+        val collection = database.getCollection<TestUser>("test_user")
+
+        return collection.find()
+    }
+
+    fun addUser(login: String, password: String) {
+        val client = KMongo.createClient("10.10.80.20", 27017)
+        val database = client.getDatabase("mfc-stage")
+        val collection = database.getCollection<TestUser>("test_user")
+        collection.insertOne(TestUser(login, password))
     }
 
     /**
      * Что планируется сделать:
      --1. Собрать jar
      --2. Загрузка из файла
-     * 3. Сохранение в файл
+     --3. Сохранение в файл
+     * 3.1. Очистка полей после сохранения
      * 4. Сортировка по алфавиту
      * 5. Поиск
      * 6. Добавление избранного
