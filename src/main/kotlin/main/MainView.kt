@@ -5,37 +5,53 @@ import javafx.beans.property.SimpleStringProperty
 import javafx.collections.FXCollections
 import javafx.collections.ObservableList
 import javafx.scene.control.ListView
+import javafx.scene.control.TextField
 import javafx.scene.input.Clipboard
 import javafx.stage.Stage
 import org.litote.kmongo.KMongo
 import org.litote.kmongo.getCollection
 import tornadofx.*
+import java.util.stream.Collectors
 
 class MainView : View() {
     private val controller: MainController by inject()
     private val login = SimpleStringProperty()
     private val password = SimpleStringProperty()
-    private val input = SimpleStringProperty()
     private val output = SimpleStringProperty()
+    private val search = SimpleStringProperty();
 
+    private var searchTextField: TextField by singleAssign()
     private var loginsList: ListView<String> by singleAssign()
 
     override val root = vbox {
-        hbox {
-            textfield(login)
-            textfield(password)
-            button {
-                action {
-                    controller.addUser(login.get(), password.get())
-                    loginsList.items = controller.getLogins()
+        gridpane {
+            row {
+                label("Логин")
+
+                label("Пароль")
+            }
+
+            row {
+                textfield(login)
+
+                textfield(password)
+
+                button("Добавить") {
+                    action {
+                        controller.addUser(login.get(), password.get())
+                        loginsList.items = controller.getLogins()
+                        login.set("")
+                        password.set("")
+                    }
                 }
             }
         }
-        textfield(input)
 
-        button("Получить") {
-            action {
-                controller.getPassword(input.get(), output)
+        vbox {
+            label("Поиск")
+
+            searchTextField = textfield(search) {
+                setOnKeyReleased { loginsList.items = FXCollections.observableArrayList(controller.search(search.get())) }
             }
         }
 
@@ -53,6 +69,7 @@ class MainView : View() {
             }
         }
 
+        label("Буфер обмена")
         textfield(output)
     }
 
@@ -123,12 +140,21 @@ class MainController: Controller() {
         collection.insertOne(TestUser(login, password))
     }
 
+    fun search(searchString: String): List<String> {
+        if (searchString.isEmpty()) {
+           return loginList
+        }
+        return loginList.stream().filter{item -> item.contains(searchString)}.collect(Collectors.toList())
+    }
+
     /**
      * Что планируется сделать:
      --1. Собрать jar
      --2. Загрузка из файла
+     * 2.1. Обновление записей
      --3. Сохранение в файл
      * 3.1. Очистка полей после сохранения
+     *
      * 4. Сортировка по алфавиту
      * 5. Поиск
      * 6. Добавление избранного

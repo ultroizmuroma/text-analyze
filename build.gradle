@@ -2,8 +2,8 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.2.51'
 }
 
-group 'kotlin-tornado'
-version '1.0-SNAPSHOT'
+group 'fast-pwd'
+version '0.1'
 
 repositories {
     mavenCentral()
@@ -25,6 +25,7 @@ compileTestKotlin {
 }
 
 jar {
+    archivesBaseName = 'fast-pwd'
     manifest {
         attributes 'Main-Class': 'main.MainViewKt'
     }
